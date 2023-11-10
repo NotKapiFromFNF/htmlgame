@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undertale-inspired Game</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 50px;
+    }
+
+    #game-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    button {
+      font-size: 16px;
+      padding: 10px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1>Undertale-inspired Game</h1>
+    <p id="story">Once upon a time...</p>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <script>
+    let storyIndex = 0;
+
+    const storyElements = [
+      { text: "You find yourself in a mysterious cave.", choices: ["Explore", "Stay put"] },
+      { text: "As you explore, you encounter a friendly monster.", choices: ["Talk", "Ignore"] },
+      { text: "The monster offers you a choice:", choices: ["Accept", "Decline"] },
+      { text: "You live happily ever after.", choices: [] },
+    ];
+
+    function startGame() {
+      displayStory();
+    }
+
+    function displayStory() {
+      const storyContainer = document.getElementById('story');
+      const currentElement = storyElements[storyIndex];
+
+      storyContainer.textContent = currentElement.text;
+
+      if (currentElement.choices.length > 0) {
+        renderChoices(currentElement.choices);
+      } else {
+        endGame();
+      }
+    }
+
+    function renderChoices(choices) {
+      const gameContainer = document.getElementById('game-container');
+
+      // Remove existing buttons
+      const existingButtons = document.querySelectorAll('button.choice');
+      existingButtons.forEach(button => button.remove());
+
+      // Render new buttons
+      choices.forEach((choice, index) => {
+        const button = document.createElement('button');
+        button.textContent = choice;
+        button.className = 'choice';
+        button.onclick = () => makeChoice(index);
+        gameContainer.appendChild(button);
+      });
+    }
+
+    function makeChoice(choiceIndex) {
+      storyIndex++;
+      displayStory();
+    }
+
+    function endGame() {
+      const gameContainer = document.getElementById('game-container');
+      const restartButton = document.createElement('button');
+      restartButton.textContent = 'Restart';
+      restartButton.onclick = () => {
+        storyIndex = 0;
+        displayStory();
+      };
+
+      gameContainer.appendChild(restartButton);
+    }
+  </script>
+</body>
+</html>
