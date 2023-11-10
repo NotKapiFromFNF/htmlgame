@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Dinosaur Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+        }
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 200px;
+            border: 1px solid #ccc;
+        }
+        #dinosaur {
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+            width: 50px;
+            height: 50px;
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="dinosaur"></div>
+    </div>
+
+    <script>
+        const dinosaur = document.getElementById('dinosaur');
+        let isJumping = false;
+
+        function jump() {
+            if (!isJumping) {
+                dinosaur.style.animation = 'jump 0.5s forwards';
+                isJumping = true;
+
+                setTimeout(() => {
+                    dinosaur.style.animation = 'fall 0.5s forwards';
+                }, 500);
+
+                setTimeout(() => {
+                    isJumping = false;
+                }, 1000);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+    </script>
+</body>
+</html>
