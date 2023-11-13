@@ -27,116 +27,137 @@
       const canvas = document.getElementById("flappyBirdCanvas");
       const ctx = canvas.getContext("2d");
 
-      let password = prompt("Enter the password to play Flappy Bird:");
+      let passwordInput = document.createElement("input");
+      passwordInput.type = "password";
+      passwordInput.placeholder = "Enter the password";
+      document.body.appendChild(passwordInput);
 
-      while (password !== "flappybird") {
-        alert("Incorrect password. Please try again.");
-        password = prompt("Enter the password to play Flappy Bird:");
-      }
+      let submitButton = document.createElement("button");
+      submitButton.innerText = "Submit";
+      document.body.appendChild(submitButton);
 
-      let gameInterval;
-      let isGameOver = false;
+      submitButton.addEventListener("click", checkPassword);
 
-      const bird = {
-        x: 100,
-        y: canvas.height / 2 - 25,
-        radius: 20,
-        color: "#FFD700", // Yellow
-        velocity: 0,
-        gravity: 0.5,
-        jumpStrength: 10,
-      };
+      function checkPassword() {
+        let password = passwordInput.value;
 
-      const pillars = [];
-      const pillarWidth = 50;
-      const pillarGap = 200;
-      const pillarSpeed = 5;
+        if (password === "flappybird") {
+          document.body.removeChild(passwordInput);
+          document.body.removeChild(submitButton);
 
-      function drawBird() {
-        ctx.beginPath();
-        ctx.arc(bird.x, bird.y, bird.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = bird.color;
-        ctx.fill();
-        ctx.closePath();
-      }
-
-      function drawPillar(x, height) {
-        ctx.fillStyle = "#008000"; // Green
-        ctx.fillRect(x, 0, pillarWidth, height);
-        ctx.fillRect(x, height + pillarGap, pillarWidth, canvas.height - height - pillarGap);
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (!isGameOver) {
-          bird.velocity += bird.gravity;
-          bird.y += bird.velocity;
-
-          if (bird.y > canvas.height - bird.radius) {
-            bird.y = canvas.height - bird.radius;
-            bird.velocity = 0;
-          }
-
-          drawBird();
-
-          if (Math.random() < 0.02) {
-            const pillarHeight = Math.random() * (canvas.height - pillarGap);
-            pillars.push({ x: canvas.width, height: pillarHeight });
-          }
-
-          for (let i = 0; i < pillars.length; i++) {
-            pillars[i].x -= pillarSpeed;
-            drawPillar(pillars[i].x, pillars[i].height);
-
-            if (
-              bird.x + bird.radius > pillars[i].x &&
-              bird.x - bird.radius < pillars[i].x + pillarWidth &&
-              (bird.y - bird.radius < pillars[i].height || bird.y + bird.radius > pillars[i].height + pillarGap)
-            ) {
-              gameOver();
-            }
-
-            if (pillars[i].x + pillarWidth < 0) {
-              pillars.splice(i, 1);
-              i--;
-            }
-          }
+          initializeGame();
         } else {
-          ctx.font = "30px Arial";
-          ctx.fillStyle = "#000";
-          ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2 - 15);
-          ctx.fillText("Press Enter to Play Again", canvas.width / 2 - 200, canvas.height / 2 + 30);
+          alert("Incorrect password. Please try again.");
         }
       }
 
-      function gameOver() {
-        isGameOver = true;
-        clearInterval(gameInterval);
-        document.addEventListener("keydown", restartGame);
-      }
+      function initializeGame() {
+        let gameInterval;
+        let isGameOver = false;
 
-      function restartGame(event) {
-        if (event.key === "Enter") {
-          document.removeEventListener("keydown", restartGame);
-          isGameOver = false;
-          bird.y = canvas.height / 2 - 25;
-          pillars.length = 0;
-          gameInterval = setInterval(draw, 20);
+        const bird = {
+          x: 100,
+          y: canvas.height / 2 - 25,
+          radius: 20,
+          color: "#FFD700", // Yellow
+          velocity: 0,
+          gravity: 0.5,
+          jumpStrength: 10,
+        };
+
+        const pillars = [];
+        const pillarWidth = 50;
+        const pillarGap = 200;
+        const pillarSpacing = 300;
+        const pillarSpeed = 5;
+
+        function drawBird() {
+          ctx.beginPath();
+          ctx.arc(bird.x, bird.y, bird.radius, 0, 2 * Math.PI);
+          ctx.fillStyle = bird.color;
+          ctx.fill();
+          ctx.closePath();
         }
-      }
 
-      document.addEventListener("keydown", function (event) {
-        if (event.key === " " || event.key === "ArrowUp" || event.key === "w") {
+        function drawPillar(x, gapStart) {
+          const gapHeight = canvas.height - pillarGap;
+          ctx.fillStyle = "#008000"; // Green
+          ctx.fillRect(x, 0, pillarWidth, gapStart);
+          ctx.fillRect(x, gapStart + pillarGap, pillarWidth, gapHeight - gapStart);
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
           if (!isGameOver) {
-            bird.velocity = -bird.jumpStrength;
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            if (bird.y > canvas.height - bird.radius) {
+              bird.y = canvas.height - bird.radius;
+              bird.velocity = 0;
+            }
+
+            drawBird();
+
+            if (Math.random() < 0.01) {
+              const gapStart = Math.random() * (canvas.height - pillarGap);
+              pillars.push({ x: canvas.width, gapStart });
+            }
+
+            for (let i = 0; i < pillars.length; i++) {
+              pillars[i].x -= pillarSpeed;
+              drawPillar(pillars[i].x, pillars[i].gapStart);
+
+              if (
+                bird.x + bird.radius > pillars[i].x &&
+                bird.x - bird.radius < pillars[i].x + pillarWidth &&
+                (bird.y - bird.radius < pillars[i].gapStart || bird.y + bird.radius > pillars[i].gapStart + pillarGap)
+              ) {
+                gameOver();
+              }
+
+              if (pillars[i].x + pillarWidth < 0) {
+                pillars.splice(i, 1);
+                i--;
+              }
+            }
           } else {
-            restartGame(event);
+            ctx.font = "30px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2 - 15);
+            ctx.fillText("Press Enter to Play Again", canvas.width / 2 - 200, canvas.height / 2 + 30);
           }
         }
-      });
 
-      gameInterval = setInterval(draw, 20);
+        function gameOver() {
+          isGameOver = true;
+          clearInterval(gameInterval);
+          document.addEventListener("keydown", restartGame);
+        }
+
+        function restartGame(event) {
+          if (event.key === "Enter") {
+            document.removeEventListener("keydown", restartGame);
+            isGameOver = false;
+            bird.y = canvas.height / 2 - 25;
+            pillars.length = 0;
+            gameInterval = setInterval(draw, 20);
+          }
+        }
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === " " || event.key === "ArrowUp" || event.key === "w") {
+            if (!isGameOver) {
+              bird.velocity = -bird.jumpStrength;
+            } else {
+              restartGame(event);
+            }
+          }
+        });
+
+        gameInterval = setInterval(draw, 20);
+      }
     });
   </script>
 </body>
