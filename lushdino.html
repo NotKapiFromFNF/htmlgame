@@ -31,7 +31,9 @@
       jumpCount: 0
     };
 
-    let obstacles = [];
+    let pillars = [];
+    let pillarWidth = 50;
+    let pillarGap = 150;
     let gravity = 2;
 
     // Handle keyboard input
@@ -60,32 +62,33 @@
         }
       }
 
-      // Update obstacle position
-      for (let i = 0; i < obstacles.length; i++) {
-        obstacles[i].x -= 5;
+      // Update pillar position
+      for (let i = 0; i < pillars.length; i++) {
+        pillars[i].x -= 5;
 
         // Check for collision with player
         if (
-          player.x < obstacles[i].x + obstacles[i].width &&
-          player.x + player.width > obstacles[i].x &&
-          player.y < obstacles[i].y + obstacles[i].height &&
-          player.y + player.height > obstacles[i].y
+          player.x < pillars[i].x + pillarWidth &&
+          player.x + player.width > pillars[i].x &&
+          (player.y < pillars[i].y || player.y + player.height > pillars[i].y + pillarGap)
         ) {
           alert('Game Over!');
           resetGame();
         }
       }
 
-      // Remove off-screen obstacles
-      obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+      // Remove off-screen pillars
+      pillars = pillars.filter(pillar => pillar.x + pillarWidth > 0);
 
-      // Add new obstacle
+      // Add new pillar
       if (Math.random() < 0.02) {
-        obstacles.push({
+        let holePosition = Math.floor(Math.random() * (canvas.height - pillarGap));
+        pillars.push({
           x: canvas.width,
-          y: canvas.height - 50,
-          width: 50,
-          height: 50,
+          y: holePosition,
+          holePosition: holePosition,
+          width: pillarWidth,
+          height: canvas.height - holePosition - pillarGap,
           color: 'red'
         });
       }
@@ -103,10 +106,13 @@
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.width, player.height);
 
-      // Draw obstacles
-      for (let i = 0; i < obstacles.length; i++) {
-        ctx.fillStyle = obstacles[i].color;
-        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+      // Draw pillars
+      for (let i = 0; i < pillars.length; i++) {
+        ctx.fillStyle = pillars[i].color;
+        // Draw upper part of pillar
+        ctx.fillRect(pillars[i].x, 0, pillars[i].width, pillars[i].y);
+        // Draw lower part of pillar
+        ctx.fillRect(pillars[i].x, pillars[i].y + pillarGap, pillars[i].width, pillars[i].height);
       }
     }
 
@@ -119,7 +125,7 @@
     // Reset game
     function resetGame() {
       player.y = canvas.height - 50;
-      obstacles = [];
+      pillars = [];
     }
 
     // Start the game loop
