@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    canvas {
+      border: 1px solid #000;
+      display: block;
+      margin: 20px auto;
+    }
+  </style>
+  <title>Dinosaur Jumper</title>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    // Game variables
+    let canvas = document.getElementById('gameCanvas');
+    let ctx = canvas.getContext('2d');
+
+    let player = {
+      x: 50,
+      y: canvas.height - 50,
+      width: 50,
+      height: 50,
+      color: 'green',
+      isJumping: false,
+      jumpHeight: 100,
+      jumpCount: 0
+    };
+
+    let obstacles = [];
+    let gravity = 2;
+
+    // Handle keyboard input
+    document.addEventListener('keydown', function (event) {
+      if (event.code === 'Space' && !player.isJumping) {
+        player.isJumping = true;
+      }
+    });
+
+    // Update game elements
+    function update() {
+      // Update player position
+      if (player.isJumping) {
+        player.y -= 5;
+        player.jumpCount += 5;
+
+        if (player.jumpCount >= player.jumpHeight) {
+          player.isJumping = false;
+          player.jumpCount = 0;
+        }
+      } else {
+        if (player.y < canvas.height - player.height) {
+          player.y += gravity;
+        } else {
+          player.y = canvas.height - player.height;
+        }
+      }
+
+      // Update obstacle position
+      for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].x -= 5;
+
+        // Check for collision with player
+        if (
+          player.x < obstacles[i].x + obstacles[i].width &&
+          player.x + player.width > obstacles[i].x &&
+          player.y < obstacles[i].y + obstacles[i].height &&
+          player.y + player.height > obstacles[i].y
+        ) {
+          alert('Game Over!');
+          resetGame();
+        }
+      }
+
+      // Remove off-screen obstacles
+      obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+
+      // Add new obstacle
+      if (Math.random() < 0.02) {
+        obstacles.push({
+          x: canvas.width,
+          y: canvas.height - 50,
+          width: 50,
+          height: 50,
+          color: 'red'
+        });
+      }
+
+      // Redraw canvas
+      draw();
+    }
+
+    // Draw game elements
+    function draw() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw player
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Draw obstacles
+      for (let i = 0; i < obstacles.length; i++) {
+        ctx.fillStyle = obstacles[i].color;
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+      }
+    }
+
+    // Game loop
+    function gameLoop() {
+      update();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Reset game
+    function resetGame() {
+      player.y = canvas.height - 50;
+      obstacles = [];
+    }
+
+    // Start the game loop
+    gameLoop();
+  </script>
+</body>
+</html>
