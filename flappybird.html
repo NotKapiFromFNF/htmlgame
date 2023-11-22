@@ -3,162 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flappy Bird</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #87CEEB; /* Sky Blue */
-    }
-
     canvas {
-      border: 2px solid #000;
+      border: 1px solid #000;
+      display: block;
+      margin: 20px auto;
     }
   </style>
+  <title>Flappy Bird</title>
 </head>
 <body>
-  <canvas id="flappyBirdCanvas" width="800" height="600"></canvas>
+  <canvas id="gameCanvas" width="480" height="320"></canvas>
+
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const canvas = document.getElementById("flappyBirdCanvas");
-      const ctx = canvas.getContext("2d");
+    // Get the canvas and context
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-      let passwordInput = document.createElement("input");
-      passwordInput.type = "password";
-      passwordInput.placeholder = "Enter the password";
-      document.body.appendChild(passwordInput);
+    // Bird properties
+    const bird = {
+      x: 50,
+      y: canvas.height / 2 - 15,
+      radius: 15,
+      velocity: 0,
+      gravity: 0.5,
+      jump: -8
+    };
 
-      let submitButton = document.createElement("button");
-      submitButton.innerText = "Submit";
-      document.body.appendChild(submitButton);
+    // Pipe properties
+    const pipes = [];
+    const pipeWidth = 50;
+    const pipeHeight = 200;
+    const pipeGap = 100;
+    const pipeSpeed = 2;
 
-      submitButton.addEventListener("click", checkPassword);
-
-      function checkPassword() {
-        let password = passwordInput.value;
-
-        if (password === "flappybird") {
-          document.body.removeChild(passwordInput);
-          document.body.removeChild(submitButton);
-
-          initializeGame();
-        } else {
-          alert("Incorrect password. Please try again.");
-        }
-      }
-
-      function initializeGame() {
-        let gameInterval;
-        let isGameOver = false;
-
-        const bird = {
-          x: 100,
-          y: canvas.height / 2 - 25,
-          radius: 20,
-          color: "#FFD700", // Yellow
-          velocity: 0,
-          gravity: 0.5,
-          jumpStrength: 10,
-        };
-
-        const pillars = [];
-        const pillarWidth = 50;
-        const pillarGap = 200;
-        const pillarSpacing = 300;
-        const pillarSpeed = 5;
-
-        function drawBird() {
-          ctx.beginPath();
-          ctx.arc(bird.x, bird.y, bird.radius, 0, 2 * Math.PI);
-          ctx.fillStyle = bird.color;
-          ctx.fill();
-          ctx.closePath();
-        }
-
-        function drawPillar(x, gapStart) {
-          const gapHeight = canvas.height - pillarGap;
-          ctx.fillStyle = "#008000"; // Green
-          ctx.fillRect(x, 0, pillarWidth, gapStart);
-          ctx.fillRect(x, gapStart + pillarGap, pillarWidth, gapHeight - gapStart);
-        }
-
-        function draw() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          if (!isGameOver) {
-            bird.velocity += bird.gravity;
-            bird.y += bird.velocity;
-
-            if (bird.y > canvas.height - bird.radius) {
-              bird.y = canvas.height - bird.radius;
-              bird.velocity = 0;
-            }
-
-            drawBird();
-
-            if (Math.random() < 0.01) {
-              const gapStart = Math.random() * (canvas.height - pillarGap);
-              pillars.push({ x: canvas.width, gapStart });
-            }
-
-            for (let i = 0; i < pillars.length; i++) {
-              pillars[i].x -= pillarSpeed;
-              drawPillar(pillars[i].x, pillars[i].gapStart);
-
-              if (
-                bird.x + bird.radius > pillars[i].x &&
-                bird.x - bird.radius < pillars[i].x + pillarWidth &&
-                (bird.y - bird.radius < pillars[i].gapStart || bird.y + bird.radius > pillars[i].gapStart + pillarGap)
-              ) {
-                gameOver();
-              }
-
-              if (pillars[i].x + pillarWidth < 0) {
-                pillars.splice(i, 1);
-                i--;
-              }
-            }
-          } else {
-            ctx.font = "30px Arial";
-            ctx.fillStyle = "#000";
-            ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2 - 15);
-            ctx.fillText("Press Enter to Play Again", canvas.width / 2 - 200, canvas.height / 2 + 30);
-          }
-        }
-
-        function gameOver() {
-          isGameOver = true;
-          clearInterval(gameInterval);
-          document.addEventListener("keydown", restartGame);
-        }
-
-        function restartGame(event) {
-          if (event.key === "Enter") {
-            document.removeEventListener("keydown", restartGame);
-            isGameOver = false;
-            bird.y = canvas.height / 2 - 25;
-            pillars.length = 0;
-            gameInterval = setInterval(draw, 20);
-          }
-        }
-
-        document.addEventListener("keydown", function (event) {
-          if (event.key === " " || event.key === "ArrowUp" || event.key === "w") {
-            if (!isGameOver) {
-              bird.velocity = -bird.jumpStrength;
-            } else {
-              restartGame(event);
-            }
-          }
-        });
-
-        gameInterval = setInterval(draw, 20);
+    // Handle spacebar press
+    document.addEventListener("keydown", function(event) {
+      if (event.code === "Space") {
+        bird.velocity = bird.jump;
       }
     });
+
+    function drawBird() {
+      ctx.beginPath();
+      ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "yellow";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawPipe(pipeX, pipeHeight, isBottom) {
+      ctx.fillStyle = "green";
+      ctx.fillRect(pipeX, isBottom ? canvas.height - pipeHeight : 0, pipeWidth, pipeHeight);
+    }
+
+    function draw() {
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update bird position and velocity
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      // Draw bird
+      drawBird();
+
+      // Generate pipes
+      if (Math.random() < 0.02) {
+        pipes.push({ x: canvas.width, height: Math.random() * (canvas.height - pipeGap * 2) + pipeGap });
+      }
+
+      // Move and draw pipes
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        pipes[i].x -= pipeSpeed;
+        drawPipe(pipes[i].x, pipes[i].height, false);
+        drawPipe(pipes[i].x, canvas.height - pipes[i].height - pipeGap, true);
+
+        // Check for collisions
+        if (
+          bird.x + bird.radius > pipes[i].x &&
+          bird.x - bird.radius < pipes[i].x + pipeWidth &&
+          (bird.y - bird.radius < pipes[i].height || bird.y + bird.radius > canvas.height - pipes[i].height - pipeGap)
+        ) {
+          alert("Game over!");
+          pipes.length = 0; // Clear pipes array
+          bird.y = canvas.height / 2 - 15; // Reset bird position
+          bird.velocity = 0; // Reset bird velocity
+        }
+
+        // Remove off-screen pipes
+        if (pipes[i].x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+
+      // Check for bird out-of-bounds
+      if (bird.y - bird.radius < 0 || bird.y + bird.radius > canvas.height) {
+        alert("Game over!");
+        pipes.length = 0; // Clear pipes array
+        bird.y = canvas.height / 2 - 15; // Reset bird position
+        bird.velocity = 0; // Reset bird velocity
+      }
+
+      // Repeat the draw function
+      requestAnimationFrame(draw);
+    }
+
+    // Start the game loop
+    draw();
   </script>
 </body>
 </html>
