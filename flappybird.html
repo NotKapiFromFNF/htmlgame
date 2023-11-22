@@ -23,96 +23,105 @@
       overflow: hidden;
     }
 
-    .note {
+    .paddle {
       position: absolute;
-      width: 50px;
-      height: 20px;
+      width: 20px;
+      height: 100px;
       background-color: #61dafb;
-      border-radius: 5px;
     }
 
-    .feedback {
+    .ball {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 24px;
-      display: none;
+      width: 20px;
+      height: 20px;
+      background-color: #61dafb;
+      border-radius: 50%;
     }
   </style>
-  <title>Rhythm Game</title>
+  <title>Ping Pong Game</title>
 </head>
 <body>
   <div id="gameContainer">
-    <div class="note" data-time="1000"></div>
-    <div class="note" data-time="2000"></div>
-    <div class="note" data-time="3000"></div>
+    <div id="leftPaddle" class="paddle" style="left: 20px;"></div>
+    <div id="rightPaddle" class="paddle" style="right: 20px;"></div>
+    <div id="ball" class="ball"></div>
   </div>
-  <div id="feedback" class="feedback"></div>
 
   <script>
-    const notes = document.querySelectorAll('.note');
-    const feedback = document.getElementById('feedback');
+    const leftPaddle = document.getElementById('leftPaddle');
+    const rightPaddle = document.getElementById('rightPaddle');
+    const ball = document.getElementById('ball');
+    const gameContainer = document.getElementById('gameContainer');
 
-    let score = 0;
+    let ballX = 300;
+    let ballY = 200;
+    let ballSpeedX = 5;
+    let ballSpeedY = 2;
 
-    notes.forEach(note => {
-      note.addEventListener('click', () => {
-        const currentTime = new Date().getTime();
-        const noteTime = parseInt(note.getAttribute('data-time'));
+    let leftPaddleY = 150;
+    let rightPaddleY = 150;
+    const paddleSpeed = 10;
 
-        if (Math.abs(currentTime - noteTime) < 300) {
-          score += 100;
-          updateFeedback('Perfect!');
-        } else if (Math.abs(currentTime - noteTime) < 500) {
-          score += 50;
-          updateFeedback('Good!');
-        } else {
-          updateFeedback('Missed!');
+    function update() {
+      // Update ball position
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Ball collision with top and bottom walls
+      if (ballY <= 0 || ballY >= gameContainer.clientHeight - 20) {
+        ballSpeedY = -ballSpeedY;
+      }
+
+      // Ball collision with paddles
+      if (
+        (ballX <= 30 && ballY >= leftPaddleY && ballY <= leftPaddleY + 100) ||
+        (ballX >= gameContainer.clientWidth - 50 && ballY >= rightPaddleY && ballY <= rightPaddleY + 100)
+      ) {
+        ballSpeedX = -ballSpeedX;
+      }
+
+      // Ball out of bounds (score)
+      if (ballX < 0 || ballX > gameContainer.clientWidth) {
+        resetBall();
+      }
+
+      // Update paddle positions
+      document.addEventListener('keydown', function (event) {
+        // Left paddle controls (W and S keys)
+        if (event.code === 'KeyW' && leftPaddleY > 0) {
+          leftPaddleY -= paddleSpeed;
+        } else if (event.code === 'KeyS' && leftPaddleY < gameContainer.clientHeight - 100) {
+          leftPaddleY += paddleSpeed;
         }
 
-        setTimeout(() => {
-          note.style.display = 'none';
-        }, 100);
-
-        setTimeout(() => {
-          updateFeedback('');
-        }, 1000);
+        // Right paddle controls (Up and Down arrow keys)
+        if (event.code === 'ArrowUp' && rightPaddleY > 0) {
+          rightPaddleY -= paddleSpeed;
+        } else if (event.code === 'ArrowDown' && rightPaddleY < gameContainer.clientHeight - 100) {
+          rightPaddleY += paddleSpeed;
+        }
       });
-    });
 
-    function updateFeedback(text) {
-      feedback.innerText = text;
-      feedback.style.display = 'block';
+      // Update paddle positions
+      leftPaddle.style.top = `${leftPaddleY}px`;
+      rightPaddle.style.top = `${rightPaddleY}px`;
 
-      setTimeout(() => {
-        feedback.style.display = 'none';
-      }, 500);
+      // Update ball position
+      ball.style.left = `${ballX}px`;
+      ball.style.top = `${ballY}px`;
+
+      // Repeat the update function
+      requestAnimationFrame(update);
     }
 
-    function createNote() {
-      const note = document.createElement('div');
-      note.className = 'note';
-      note.style.left = Math.random() * 550 + 'px';
-      note.style.animationDuration = Math.random() * 2 + 1 + 's';
-
-      const currentTime = new Date().getTime();
-      note.setAttribute('data-time', currentTime);
-      document.getElementById('gameContainer').appendChild(note);
-
-      setTimeout(() => {
-        note.remove();
-        updateFeedback('Missed!');
-      }, 3000);
+    function resetBall() {
+      ballX = gameContainer.clientWidth / 2;
+      ballY = gameContainer.clientHeight / 2;
+      ballSpeedX = -ballSpeedX;
     }
 
-    setInterval(() => {
-      createNote();
-    }, 3000);
-
-    setInterval(() => {
-      document.getElementById('score').innerText = 'Score: ' + score;
-    }, 1000);
+    // Start the game loop
+    update();
   </script>
 </body>
 </html>
